@@ -1,0 +1,31 @@
+{
+  "kind": "collectionType",
+  "collectionName": "local_shops",
+  "info": {
+    "name": "LocalShops"
+  },
+  "options": {
+    "increments": true,
+    "timestamps": true
+  },
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "site": {
+      "type": "string"
+    },
+    "vk": {
+      "type": "string"
+    },
+    "inst": {
+      "type": "string"
+    },
+    "tg": {
+      "type": "string"
+    }
+  }
+}

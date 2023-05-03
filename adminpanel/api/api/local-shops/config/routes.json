@@ -1,0 +1,52 @@
+{
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/local-shops",
+      "handler": "local-shops.find",
+      "config": {
+        "policies": []
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/local-shops/count",
+      "handler": "local-shops.count",
+      "config": {
+        "policies": []
+      }
+    },
+    {
+      "method": "GET",
+      "path": "/local-shops/:id",
+      "handler": "local-shops.findOne",
+      "config": {
+        "policies": []
+      }
+    },
+    {
+      "method": "POST",
+      "path": "/local-shops",
+      "handler": "local-shops.create",
+      "config": {
+        "policies": []
+      }
+    },
+    {
+      "method": "PUT",
+      "path": "/local-shops/:id",
+      "handler": "local-shops.update",
+      "config": {
+        "policies": []
+      }
+    },
+    {
+      "method": "DELETE",
+      "path": "/local-shops/:id",
+      "handler": "local-shops.delete",
+      "config": {
+        "policies": []
+      }
+    }
+  ]
+}
