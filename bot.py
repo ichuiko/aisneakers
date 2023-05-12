@@ -8,7 +8,7 @@ import logging
 import json
 from datetime import datetime
 from hypebeast import Hypebeast
-from db import getNonSendedToTGPosts, updatePost , getPostContentById , getImagesByPostId
+from db import getNonSendedToTGPosts, updatePost , getPostContentById , getImagesByPostId, saveUserId , getGeneratedLinks
 from gpt import createPost
 from strapp import Strapp
 
@@ -38,24 +38,40 @@ def checkPosts(context : CallbackContext) :
         context.bot.send_message(chat_id=STAGE_CHANNEL, text=message, reply_markup=reply_markup)
         updatePost(operation='send_to_telegram', postId=post['info'][0])
 
-def localStores(update: Update , context : CallbackContext) :
-    pass
-
 def start(update: Update , context : CallbackContext) :
     userId = update.message.from_user.id
+    saveUserId(userId)
     if userId == ADMIN_USERID:
         context.bot.send_message(chat_id=update.effective_chat.id, text='Rabotaem')
         context.job_queue.run_repeating(checkPosts,40, context=update.message.chat_id)
         context.job_queue.run_repeating(parsePostsTask,100, context=update.message.chat_id)
     else:
-        data = {
+        dataLocalShops = {
             'operation' : 'localShops',
             'chatId' : update.message.chat_id
         }
-        text = """Привет! Я бот канала 'ВAI, что за тяги' и могу быть твоим проводником в мир кроссовок. Я умею:"""
-        keyboard = [[InlineKeyboardButton("🏠 Покажи проверенные магазины в России", callback_data=json.dumps(data))]]
+        dataGenerate = {
+            'operation' : 'generate',
+            'chatId' : update.message.chat_id
+        }
+        text = """Привет! Я бот канала 'ВAI, что за тяги' и могу быть твоим проводником в мир кроссовок. Я могу:"""
+        keyboard = [[InlineKeyboardButton("🏠 Покажи проверенные магазины в России", callback_data=json.dumps(dataLocalShops))],[InlineKeyboardButton("🖥 Сгенерировать изображения кроссовок, которых не существует", callback_data=json.dumps(dataGenerate))]]
         reply_markup = InlineKeyboardMarkup(keyboard)
         context.bot.send_message(chat_id=update.effective_chat.id, text=text,reply_markup=reply_markup)
+
+def generate(update: Update, context: ContextTypes) -> None:
+    links = getGeneratedLinks()
+    counter = 1
+    items = []
+    message = f"""Чтобы сгенерировать еще 10 кроссовок, нажми /generate"""
+    for img in links:
+        if counter == 1:
+                med = InputMediaPhoto(media=img, caption=message)
+        else:
+            med = InputMediaPhoto(media=img)
+        items.append(med)
+        counter = 0
+    context.bot.send_media_group(chat_id=update.effective_chat.id,media = items)
 
 def button(update: Update, context: ContextTypes) -> None:
     query = update.callback_query
@@ -83,7 +99,20 @@ def button(update: Update, context: ContextTypes) -> None:
         for shop in shopInfo:
             message += f"🔸 *{shop['name']}* , {shop['location']} \n"
             message += f"  [сайт]({shop['site']})  [vk]({shop['vk']})  [tg]({shop['tg']}) \n\n"
-        context.bot.send_message(chat_id=data['chatId'],text=message, parse_mode='MarkdownV2')
+        context.bot.send_message(chat_id=data['chatId'],text=message, parse_mode='MarkdownV2', disable_web_page_preview=True)
+    elif data['operation'] == 'generate' :
+        links = getGeneratedLinks()
+        counter = 1
+        items = []
+        message = f"""Чтобы сгенерировать еще 10 кроссовок, нажми /generate"""
+        for img in links:
+            if counter == 1:
+                    med = InputMediaPhoto(media=img, caption=message)
+            else:
+                med = InputMediaPhoto(media=img)
+            items.append(med)
+            counter = 0
+        context.bot.send_media_group(chat_id=update.effective_chat.id,media = items)
 
 if __name__ == "__main__" :
     TOKEN = "6290678020:AAFy9CdpJhcavRMLJAJEj5_Vr6MUsoIgBBs"
@@ -98,6 +127,8 @@ if __name__ == "__main__" :
     dispatcher.add_handler(start_handler)
     button_handler = CallbackQueryHandler(button)
     dispatcher.add_handler(button_handler)
+    generate_handler = CommandHandler('generate', generate)
+    dispatcher.add_handler(generate_handler)
 
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',level=logging.INFO)
     updater.start_polling()

@@ -11,4 +11,3 @@ class Strapp() :
         data = json.loads(r.text)
         
         return data
-

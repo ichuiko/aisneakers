@@ -2,9 +2,14 @@ import sqlite3
 from datetime import datetime
 import os.path as pt
 import json
+import random
 
 #conn = sqlite3.connect(pt.abspath("db.db"))
 #cursor = conn.cursor()
+#query = """CREATE TABLE tsdne_links (id INTEGER PRIMARY KEY AUTOINCREMENT , link text )"""
+#cursor.execute(query)
+#query = """CREATE TABLE users (userId int PRIMARY KEY)"""
+#cursor.execute(query)
 #query = """CREATE TABLE posts (id text PRIMARY KEY, link text, date_create text, header text, is_parsed int, content text,  sended_to_tg int, sended_to_tg_date text, sended_to_openai int , sended_to_openai_date text, openai_content text )"""
 #cursor.execute(query)
 #query = """CREATE TABLE images (postId text, link text)"""
@@ -94,8 +99,33 @@ def getImagesByPostId(postId:str) :
     
     return img
 
-conn = sqlite3.connect(pt.abspath("db.db"))
-cursor = conn.cursor()
-query = """DELETE FROM posts WHERE id='post-6027358'"""
-cursor.execute(query)
-conn.commit()
+def saveUserId(userId:int) :
+    conn = sqlite3.connect(pt.abspath("db.db"))
+    cursor = conn.cursor()
+    try:
+        query = f"""INSERT INTO users VALUES({userId})"""
+        cursor.execute(query)
+        conn.commit()
+    except sqlite3.IntegrityError:
+        return 
+    return
+
+def getGeneratedLinks(count=10):
+    conn = sqlite3.connect(pt.abspath("db.db"))
+    cursor = conn.cursor()
+    query = """SELECT id FROM tsdne_links"""
+    cursor.execute(query)
+    data = cursor.fetchall()
+    max = len(data)
+    result = []
+    counter = 0
+
+    while counter != count:
+        index = random.randint(1,max)
+        query = f"""SELECT link FROM tsdne_links WHERE id = {index}"""
+        cursor.execute(query)
+        link = cursor.fetchall()
+        result.append(link[0][0])
+        counter += 1
+
+    return result
